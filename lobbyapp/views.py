@@ -106,7 +106,7 @@ def add_entry(request):
 
 def delete_old_entries():
   t = localtime(now()) - timedelta(seconds=ENTRY_TIMEOUT)
-  entries = Entry.objects.filter(updated__lt=t).all()
+  entries = Entry.objects.filter(fixed=False, updated__lt=t).all()
 
   for entry in entries:
     entry.delete()
