@@ -22,6 +22,7 @@ class Entry(models.Model):
 
   host_method = models.PositiveSmallIntegerField('host method', choices=HOST_CHOICES)
   created = models.DateTimeField('created', auto_now_add=True)
+  updated = models.DateTimeField('updated', auto_now=True)
 
   def __unicode__(self):
     return self.username + '@' + self.ip + ' Core: ' + self.core_name + ' ' + self.core_version + ' Game: ' + self.game_name
