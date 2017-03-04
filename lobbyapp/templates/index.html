@@ -1,3 +1,4 @@
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,11 +30,17 @@
             </p>
         </div>
         {% if entries %}
-          <table class="table"><thead><tr><th>Username</th><th>Game</th><th>Core</th></thead><tbody>
+          <table class="table"><thead><tr>
+	    <th>Nickname</th><th>Game</th><th>Core</th><th>Password?</th><th>Created</th>
+	  </tr></thead><tbody>
           {% for entry in entries %}
-            <tr><th>{{ entry.username }}</th>
-            <td>{{ entry.game_name }}</td>
-            <td>{{ entry.core_name }}</td></tr>
+            <tr>
+	      <th>{{ entry.username }}</th>
+              <td>{{ entry.game_name }}</td>
+              <td>{{ entry.core_name }} {{ entry.core_version }}</td>
+              <td>{{ entry.has_password|yesno:"Yes,No" }}</td>
+              <td>{{ entry.created|naturaltime }}</td>
+	    </tr>
           {% endfor %}
           </tbody></table>
         {% else %}
