@@ -50,3 +50,9 @@ class LogEntry(models.Model):
   has_spectate_password = models.BooleanField('has spectator password', default=False)
   host_method = models.PositiveSmallIntegerField('host method', choices=HOST_CHOICES)
   created = models.DateTimeField('created', auto_now_add=True)
+
+  def __unicode__(self):
+    return self.username + '@' + self.ip + ' Core: ' + self.core_name + ' ' + self.core_version + ' Game: ' + self.game_name
+
+  class Meta:
+    verbose_name_plural = 'Log Entries'
