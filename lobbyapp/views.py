@@ -4,8 +4,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
 from django.template import RequestContext
 from django.utils.timezone import localtime, now
+from django.core import serializers
 from datetime import timedelta
 from models import *
+import json
 
 ENTRY_TIMEOUT = 120
 THROTTLE = True
@@ -15,16 +17,28 @@ THROTTLE_SECS = 10
 def add_entry(request):
   if request.method != 'POST' or \
     not request.POST.has_key('username') or \
-    not request.POST.has_key('corename') or \
-    not request.POST.has_key('gamename') or \
-    not request.POST.has_key('gamecrc') or \
-    not request.POST.has_key('coreversion'):
+    not request.POST.has_key('core_name') or \
+    not request.POST.has_key('game_name') or \
+    not request.POST.has_key('game_crc') or \
+    not request.POST.has_key('core_version'):
       raise Http404
 
   username = request.POST['username']
   ip = None
   port = None
   update = None
+  host_method = HOST_METHOD_UNKNOWN
+  has_password = False
+  has_spectate_password = False
+
+  if request.POST.has_key('has_password') and request.POST['has_password'] == 1:
+    has_password = True
+
+  if request.POST.has_key('has_spectate_password') and request.POST['has_spectate_password'] == 1:
+    has_spectate_password = True
+
+  if request.POST.has_key('force_mitm') and request.POST['force_mitm'] == 1:
+    host_method = HOST_METHOD_MITM
 
   if request.POST.has_key('port'):
     port = int(request.POST['port'])
@@ -44,15 +58,15 @@ def add_entry(request):
   if len(username) == 0:
     username = ip
 
-  if len(request.POST['corename']) == 0 or \
-    len(request.POST['gamename']) == 0 or \
-    len(request.POST['gamecrc']) == 0 or \
-    len(request.POST['coreversion']) == 0:
+  if len(request.POST['core_name']) == 0 or \
+    len(request.POST['game_name']) == 0 or \
+    len(request.POST['game_crc']) == 0 or \
+    len(request.POST['core_version']) == 0:
       raise Http404
 
   t = localtime(now())
 
-  entries = Entry.objects.filter().all()
+  entries = Entry.objects.filter()
 
   for entry in entries:
     if THROTTLE:
@@ -71,14 +85,16 @@ def add_entry(request):
 
     kwargs = {
       'username': username,
-      'core_name': request.POST['corename'],
-      'game_name': request.POST['gamename'],
-      'game_crc': request.POST['gamecrc'],
-      'core_version': request.POST['coreversion'],
+      'core_name': request.POST['core_name'],
+      'game_name': request.POST['game_name'],
+      'game_crc': request.POST['game_crc'].upper(),
+      'core_version': request.POST['core_version'],
       'mitm_port': 0,
       'ip': ip,
       'port': port,
-      'host_method': 0,
+      'host_method': host_method,
+      'has_password': has_password,
+      'has_spectate_password': has_spectate_password,
     }
 
     if update:
@@ -93,6 +109,9 @@ def add_entry(request):
       entry = Entry.objects.create(**kwargs)
       entry.save()
 
+      log = LogEntry.objects.create(**kwargs)
+      log.save()
+
     response = HttpResponse("OK")
 
     return response
@@ -106,17 +125,28 @@ def add_entry(request):
 
 def delete_old_entries():
   t = localtime(now()) - timedelta(seconds=ENTRY_TIMEOUT)
-  entries = Entry.objects.filter(fixed=False, updated__lt=t).all()
+  entries = Entry.objects.filter(fixed=False, updated__lt=t)
 
   for entry in entries:
     entry.delete()
 
 @csrf_exempt
 def index(request):
-  entries = Entry.objects.filter().all()
+  entries = Entry.objects.filter()
 
   delete_old_entries()
 
   return render_to_response("index.html", {
     'entries': entries
   })
+
+@csrf_exempt
+def list_entries(request):
+  entries = Entry.objects.filter()
+
+  if len(entries) == 0:
+    data = '[]'
+  else:
+    data = serializers.serialize("json", entries, indent=2)
+
+  return HttpResponse(data, content_type='text/plain')
