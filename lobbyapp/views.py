@@ -69,7 +69,7 @@ def add_entry(request):
   entries = Entry.objects.filter()
 
   for entry in entries:
-    if THROTTLE:
+    if THROTTLE and ip != '127.0.0.1':
       if entry.ip == ip and (t - entry.updated).seconds < THROTTLE_SECS:
         # only one new/updated entry allowed per IP every X seconds
         raise Http404
