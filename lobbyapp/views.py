@@ -37,7 +37,7 @@ def add_entry(request):
   if request.POST.has_key('has_spectate_password') and request.POST['has_spectate_password'] == 1:
     has_spectate_password = True
 
-  if request.POST.has_key('force_mitm') and request.POST['force_mitm'] == 1:
+  if request.POST.has_key('force_mitm') and int(request.POST['force_mitm']) == 1:
     host_method = HOST_METHOD_MITM
 
   if request.POST.has_key('port'):
