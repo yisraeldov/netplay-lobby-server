@@ -132,9 +132,9 @@ def delete_old_entries():
 
 @csrf_exempt
 def index(request):
-  entries = Entry.objects.filter()
-
   delete_old_entries()
+
+  entries = Entry.objects.filter()
 
   return render_to_response("index.html", {
     'entries': entries
@@ -142,6 +142,8 @@ def index(request):
 
 @csrf_exempt
 def list_entries(request):
+  delete_old_entries()
+
   entries = Entry.objects.filter()
 
   if len(entries) == 0:
