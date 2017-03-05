@@ -7,11 +7,45 @@ from django.utils.timezone import localtime, now
 from django.core import serializers
 from datetime import timedelta
 from models import *
-import json
+import json, socket, struct
 
 ENTRY_TIMEOUT = 120
 THROTTLE = True
 THROTTLE_SECS = 10
+MITM_HOST = 'newlobby.libretro.com'
+MITM_PORT = 55435
+MITM_SOCKET_TIMEOUT = 10
+
+def request_new_mitm_port():
+  try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(MITM_SOCKET_TIMEOUT)
+    s.connect((MITM_HOST, MITM_PORT))
+
+    # CMD_REQ_PORT
+    s.sendall('\x00\x00\x46\x49\x00\x00\x00\x00')
+
+    data = ''
+
+    while len(data) < 12:
+      data += s.recv(12)
+
+    s.close()
+
+    if data[0:8] == '\x00\x00\x46\x4a\x00\x00\x00\x04':
+      port_unpack = struct.unpack('!I', data[8:12])
+
+      if len(port_unpack) > 0:
+        port = port_unpack[0]
+
+        return port
+  except Exception, e:
+    f = open('/tmp/entry_mitm_error', 'wb')
+    f.write(str(e) + '\n')
+    f.close()
+    #pass
+
+  return 0
 
 @csrf_exempt
 def add_entry(request):
@@ -89,7 +123,6 @@ def add_entry(request):
       'game_name': request.POST['game_name'],
       'game_crc': request.POST['game_crc'].upper(),
       'core_version': request.POST['core_version'],
-      'mitm_port': 0,
       'ip': ip,
       'port': port,
       'host_method': host_method,
@@ -99,12 +132,27 @@ def add_entry(request):
 
     if update:
       entries = Entry.objects.filter(pk=update)
+
       entries.update(**kwargs)
 
       for entry in entries:
+        if entry.host_method != HOST_METHOD_MITM and host_method == HOST_METHOD_MITM:
+          new_mitm_port = request_new_mitm_port()
+
+          if new_mitm_port > 0:
+            entry.mitm_ip = MITM_HOST
+            entry.mitm_port = new_mitm_port
+
         entry.save()
     else:
       delete_old_entries()
+
+      if host_method == HOST_METHOD_MITM:
+        new_mitm_port = request_new_mitm_port()
+
+        if new_mitm_port > 0:
+          kwargs['mitm_ip'] = MITM_HOST
+          kwargs['mitm_port'] = new_mitm_port
 
       entry = Entry.objects.create(**kwargs)
       entry.save()
