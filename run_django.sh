@@ -1,8 +1,7 @@
 #!/bin/bash
 
-#!/bin/bash
-
-#source ~/venv/bin/activate
+USER_ID=`id -u`
+GROUP_ID=`id -g`
 
 killall -9 uwsgi &>/dev/null
 
@@ -15,7 +14,7 @@ uwsgi --chdir=/home/lobby/lobby \
     --master --pidfile=/tmp/lobby-master.pid \
     --fastcgi-socket=127.0.0.1:3035 \
     --processes=5 \
-    --uid=1003 --gid=1003 \
+    --uid=$USER_ID --gid=$GROUP_ID \
     --harakiri=120 \
     --max-requests=5000 \
     --vacuum \
