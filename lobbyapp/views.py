@@ -169,7 +169,13 @@ def add_entry(request):
       log = LogEntry.objects.create(**kwargs)
       log.save()
 
-    response = HttpResponse("OK")
+    result = 'status=OK\n'
+
+    if 'mitm_ip' in kwargs and 'mitm_port' in kwargs and not update:
+      result += 'mitm_ip=' + kwargs['mitm_ip'] + '\n'
+      result += 'mitm_port=' + str(kwargs['mitm_port']) + '\n'
+
+    response = HttpResponse(result, content_type='text/plain')
 
     return response
   except Exception, e:
