@@ -101,6 +101,8 @@ def add_entry(request):
 
   t = localtime(now())
 
+  delete_old_entries()
+
   entries = Entry.objects.filter()
 
   for entry in entries:
@@ -154,8 +156,6 @@ def add_entry(request):
 
         entry.save()
     else:
-      delete_old_entries()
-
       if host_method == HOST_METHOD_MITM and 'mitm_ip' not in kwargs:
         new_mitm_port = request_new_mitm_port()
 
