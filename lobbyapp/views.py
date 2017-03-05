@@ -131,13 +131,21 @@ def add_entry(request):
       'has_spectate_password': has_spectate_password,
     }
 
+    if request.POST.has_key('mitm_ip') and len(request.POST['mitm_ip']) > 0:
+      kwargs['mitm_ip'] = request.POST['mitm_ip']
+
+      if request.POST.has_key('mitm_port') and int(request.POST['mitm_port']) > 0:
+        kwargs['mitm_port'] = int(request.POST['mitm_port'])
+      else:
+        kwargs['mitm_port'] = MITM_PORT
+
     if update:
       entries = Entry.objects.filter(pk=update)
 
       entries.update(**kwargs)
 
       for entry in entries:
-        if entry.host_method != HOST_METHOD_MITM and host_method == HOST_METHOD_MITM:
+        if entry.host_method != HOST_METHOD_MITM and host_method == HOST_METHOD_MITM and 'mitm_ip' not in kwargs:
           new_mitm_port = request_new_mitm_port()
 
           if new_mitm_port > 0:
@@ -148,7 +156,7 @@ def add_entry(request):
     else:
       delete_old_entries()
 
-      if host_method == HOST_METHOD_MITM:
+      if host_method == HOST_METHOD_MITM and 'mitm_ip' not in kwargs:
         new_mitm_port = request_new_mitm_port()
 
         if new_mitm_port > 0:
