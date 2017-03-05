@@ -32,6 +32,7 @@ def request_new_mitm_port():
 
     s.close()
 
+    # CMD_NEW_PORT
     if data[0:8] == '\x00\x00\x46\x4a\x00\x00\x00\x04':
       port_unpack = struct.unpack('!I', data[8:12])
 
