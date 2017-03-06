@@ -134,8 +134,8 @@ def add_entry(request):
     }
 
     change_mitm = False
-    mitm_ip = ''
-    mitm_port = 0
+    mitm_ip = MITM_HOST
+    mitm_port = MITM_PORT
 
     if request.POST.has_key('mitm_ip') and len(request.POST['mitm_ip']) > 0:
       mitm_ip = request.POST['mitm_ip']
@@ -165,9 +165,6 @@ def add_entry(request):
         new_mitm_port = request_new_mitm_port(mitm_ip, mitm_port)
 
         if new_mitm_port > 0:
-          if mitm_ip == '':
-            mitm_ip = MITM_HOST
-
           kwargs['mitm_ip'] = mitm_ip
           kwargs['mitm_port'] = new_mitm_port
 
