@@ -16,11 +16,11 @@ MITM_HOST = 'newlobby.libretro.com'
 MITM_PORT = 55435
 MITM_SOCKET_TIMEOUT = 10
 
-def request_new_mitm_port():
+def request_new_mitm_port(mitm_ip=MITM_HOST, mitm_port=MITM_PORT):
   try:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(MITM_SOCKET_TIMEOUT)
-    s.connect((MITM_HOST, MITM_PORT))
+    s.connect((mitm_ip, mitm_port))
 
     # CMD_REQ_PORT
     s.sendall('\x00\x00\x46\x49\x00\x00\x00\x00')
@@ -133,13 +133,18 @@ def add_entry(request):
       'has_spectate_password': has_spectate_password,
     }
 
+    change_mitm = False
+    mitm_ip = ''
+    mitm_port = 0
+
     if request.POST.has_key('mitm_ip') and len(request.POST['mitm_ip']) > 0:
-      kwargs['mitm_ip'] = request.POST['mitm_ip']
+      mitm_ip = request.POST['mitm_ip']
+      change_mitm = True
 
       if request.POST.has_key('mitm_port') and int(request.POST['mitm_port']) > 0:
-        kwargs['mitm_port'] = int(request.POST['mitm_port'])
+        mitm_port = int(request.POST['mitm_port'])
       else:
-        kwargs['mitm_port'] = MITM_PORT
+        mitm_port = MITM_PORT
 
     if update:
       entries = Entry.objects.filter(pk=update)
@@ -147,7 +152,7 @@ def add_entry(request):
       entries.update(**kwargs)
 
       for entry in entries:
-        if entry.host_method != HOST_METHOD_MITM and host_method == HOST_METHOD_MITM and 'mitm_ip' not in kwargs:
+        if entry.host_method != HOST_METHOD_MITM and host_method == HOST_METHOD_MITM and not change_mitm:
           new_mitm_port = request_new_mitm_port()
 
           if new_mitm_port > 0:
@@ -156,11 +161,14 @@ def add_entry(request):
 
         entry.save()
     else:
-      if host_method == HOST_METHOD_MITM and 'mitm_ip' not in kwargs:
-        new_mitm_port = request_new_mitm_port()
+      if host_method == HOST_METHOD_MITM:
+        new_mitm_port = request_new_mitm_port(mitm_ip, mitm_port)
 
         if new_mitm_port > 0:
-          kwargs['mitm_ip'] = MITM_HOST
+          if mitm_ip == '':
+            mitm_ip = MITM_HOST
+
+          kwargs['mitm_ip'] = mitm_ip
           kwargs['mitm_port'] = new_mitm_port
 
       entry = Entry.objects.create(**kwargs)
