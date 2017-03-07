@@ -11,7 +11,7 @@ import json, socket, struct
 
 ENTRY_TIMEOUT = 60
 THROTTLE = True
-THROTTLE_SECS = 10
+THROTTLE_SECS = 5
 MITM_HOST = 'newlobby.libretro.com'
 MITM_PORT = 55435
 MITM_SOCKET_TIMEOUT = 10
