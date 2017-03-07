@@ -9,7 +9,7 @@ from datetime import timedelta
 from models import *
 import json, socket, struct
 
-ENTRY_TIMEOUT = 120
+ENTRY_TIMEOUT = 60
 THROTTLE = True
 THROTTLE_SECS = 10
 MITM_HOST = 'newlobby.libretro.com'
