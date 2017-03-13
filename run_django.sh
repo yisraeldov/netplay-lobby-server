@@ -3,7 +3,7 @@
 USER_ID=`id -u`
 GROUP_ID=`id -g`
 
-killall -9 uwsgi &>/dev/null
+ps ax|grep uwsgi|grep lobby|awk '{print $1}'|xargs kill -9
 
 sleep 1
 
