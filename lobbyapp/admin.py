@@ -47,6 +47,26 @@ class EntryForm(forms.ModelForm):
     fields = '__all__'
     exclude = ()
 
+class LogEntryForm(forms.ModelForm):
+  created = forms.CharField(required=False, widget=NoInput(attrs={'value':'0'}))
+
+  def __init__(self, *args, **kwargs):
+    super(LogEntryForm, self).__init__(*args, **kwargs)
+
+    instance = getattr(self, 'instance', None)
+
+    if instance and instance.id:
+      """ using disabled for some reason makes the fields act as if they are blank when submitting, which raises a form validation error """
+      try:
+        self.fields['created'].widget.attrs['readonly'] = True
+      except KeyError:
+        pass
+
+  class Meta:
+    model = LogEntry
+    fields = '__all__'
+    exclude = ()
+
 class EntryAdmin(admin.ModelAdmin):
   form = EntryForm
 
@@ -61,6 +81,17 @@ class EntryAdmin(admin.ModelAdmin):
       return super(EntryAdmin, self).get_form(request, obj, **kwargs)
 
 class LogEntryAdmin(admin.ModelAdmin):
+  form = LogEntryForm
+
+  def get_form(self, request, obj=None, **kwargs):
+    if obj is not None:
+      form = super(LogEntryAdmin, self).get_form(request, obj, **kwargs)
+      form.base_fields['created'].widget.attrs['value'] = obj.created
+
+      return super(LogEntryAdmin, self).get_form(request, obj, **kwargs)
+    else:
+      return super(LogEntryAdmin, self).get_form(request, obj, **kwargs)
+
   def save_model(self, request, obj, form, change):
     # ignore changes to log entries
     pass
