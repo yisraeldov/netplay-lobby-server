@@ -66,10 +66,10 @@ def add_entry(request):
   has_password = False
   has_spectate_password = False
 
-  if request.POST.has_key('has_password') and request.POST['has_password'] == 1:
+  if request.POST.has_key('has_password') and int(request.POST['has_password']) == 1:
     has_password = True
 
-  if request.POST.has_key('has_spectate_password') and request.POST['has_spectate_password'] == 1:
+  if request.POST.has_key('has_spectate_password') and int(request.POST['has_spectate_password']) == 1:
     has_spectate_password = True
 
   if request.POST.has_key('force_mitm') and int(request.POST['force_mitm']) == 1:
