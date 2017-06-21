@@ -8,7 +8,7 @@ from django.core import serializers
 from datetime import timedelta
 from models import *
 from lobby import settings_secret
-import json, socket, struct, urllib, urllib2
+import json, socket, struct, urllib, urllib2, hashlib, hmac
 
 ENTRY_TIMEOUT = 60
 THROTTLE = True
@@ -16,6 +16,28 @@ THROTTLE_SECS = 5
 MITM_HOST = 'newlobby.libretro.com'
 MITM_PORT = 55435
 MITM_SOCKET_TIMEOUT = 10
+
+def make_digest(message, key):
+  digester = hmac.new(key, message, hashlib.sha1)
+  signature = digester.hexdigest()
+
+  return signature
+
+def send_irc_netplay_message(msg):
+  msg = urllib.urlencode({'a': msg})[2:]
+
+  data = {
+    'message': msg,
+    'channel': settings_secret.irc_netplay_channel,
+    'sign': make_digest(msg, settings_secret.irc_netplay_message_key)
+  }
+
+  url = settings_secret.irc_netplay_message_endpoint + '?' + urllib.urlencode(data)
+
+  request = urllib2.Request(url)
+
+  # ignore response for now
+  urllib2.urlopen(request, timeout=10)
 
 def send_discord_netplay_message(msg):
   request = urllib2.Request(settings_secret.discord_netplay_message_endpoint)
@@ -186,9 +208,11 @@ def add_entry(request):
       log.save()
 
       if not has_password:
+        irc_msg = kwargs['username'] + ' wants to play ' + kwargs['game_name'] + ' using ' + kwargs['core_name'] + '. There are currently ' + str(Entry.objects.count()) + ' active rooms.'
         disc_msg = '`' + kwargs['username'] + '` wants to play `' + kwargs['game_name'] + '` using `' + kwargs['core_name'] + '`. There are currently `' + str(Entry.objects.count()) + '` active rooms.'
 
         send_discord_netplay_message(disc_msg)
+        send_irc_netplay_message(irc_msg)
 
     result = 'status=OK\n'
 
