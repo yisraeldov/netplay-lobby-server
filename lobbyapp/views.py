@@ -24,8 +24,6 @@ def make_digest(message, key):
   return signature
 
 def send_irc_netplay_message(msg):
-  msg = urllib.urlencode({'a': msg})[2:]
-
   data = {
     'message': msg,
     'channel': settings_secret.irc_netplay_channel,

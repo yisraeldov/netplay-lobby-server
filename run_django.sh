@@ -18,6 +18,7 @@ uwsgi --chdir=/home/lobby/lobby \
     --harakiri=120 \
     --max-requests=5000 \
     --vacuum \
+    --touch-reload=/tmp/lobby-reload \
     --pp=/usr/lib/python2.7 \
     --daemonize=/tmp/lobby.log
 #    --daemonize=/dev/null
