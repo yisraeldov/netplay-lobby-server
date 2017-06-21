@@ -7,7 +7,8 @@ from django.utils.timezone import localtime, now
 from django.core import serializers
 from datetime import timedelta
 from models import *
-import json, socket, struct
+from lobby import settings_secret
+import json, socket, struct, urllib, urllib2
 
 ENTRY_TIMEOUT = 60
 THROTTLE = True
@@ -15,6 +16,16 @@ THROTTLE_SECS = 5
 MITM_HOST = 'newlobby.libretro.com'
 MITM_PORT = 55435
 MITM_SOCKET_TIMEOUT = 10
+
+def send_discord_netplay_message(msg):
+  request = urllib2.Request(settings_secret.discord_netplay_message_endpoint)
+  request.add_header("Authorization", settings_secret.discord_retrobot_token)
+  request.add_header("User-Agent", settings_secret.discord_user_agent)
+
+  data = {'content': msg}
+
+  # ignore response for now
+  urllib2.urlopen(request, urllib.urlencode(data), timeout=10)
 
 def request_new_mitm_port(mitm_ip=MITM_HOST, mitm_port=MITM_PORT):
   try:
@@ -173,6 +184,11 @@ def add_entry(request):
 
       log = LogEntry.objects.create(**kwargs)
       log.save()
+
+      if not has_password:
+        disc_msg = '`' + kwargs['username'] + '` wants to play `' + kwargs['game_name'] + '` using `' + kwargs['core_name'] + '`. There are currently `' + str(Entry.objects.count()) + '` active rooms.'
+
+        send_discord_netplay_message(disc_msg)
 
     result = 'status=OK\n'
 
