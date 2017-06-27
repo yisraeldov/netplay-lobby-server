@@ -60,6 +60,31 @@
      * @type int
      */
     var refereshInterval = 3000
+
+    function notify($message) {
+        // Let's check if the browser supports notifications
+        if ("Notification" in window) {
+            var notificationOptions={
+                requireInteraction : true,
+                icon:"https://www.libretro.com/wp-content/uploads/2016/01/ic_launcher.png"
+            };
+
+            if (Notification.permission === "granted") {
+                var notification = new Notification($message,notificationOptions)
+            }
+
+            // Otherwise, we need to ask the user for permission
+            else if (Notification.permission !== "denied") {
+                Notification.requestPermission(function (permission) {
+                    if (permission === "granted") {
+                        var notification = new Notification($message,$notificationOptions);
+                    }
+                });
+            }
+        }
+    }
+
+
     var app = new Vue({
         el: '#app',
         data: {
@@ -85,10 +110,21 @@
                     if("some" in self.oldEntries){
                         self.entries.forEach(function(newEntry){
                             if(!(self.oldEntries.some(function(oldEntry){
-                                return oldEntry.pk == newEntry.pk
+                                return (
+                                    oldEntry.pk == newEntry.pk &&
+                                    oldEntry.fields.username == newEntry.fields.username &&
+                                    oldEntry.fields.game_name == newEntry.fields.game_name &&
+                                    oldEntry.fields.game_crc == newEntry.fields.game_crc &&
+                                    oldEntry.fields.core_name == newEntry.fields.core_name &&
+                                    oldEntry.fields.core_version == newEntry.fields.core_version
+                                )
                             }))){
-                                console.log("newEntry");
-                                console.log(newEntry);
+                                //notify on new lobby
+                                notify(
+                                    newEntry.fields.username + " Wants to play " +
+                                    newEntry.fields.game_name + " on  " +
+                                    newEntry.fields.core_name
+                                )
                             }
                         })
                     }
