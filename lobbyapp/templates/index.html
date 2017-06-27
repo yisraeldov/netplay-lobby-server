@@ -13,9 +13,13 @@
 <link rel="icon" href="https://www.libretro.com/wp-content/uploads/2016/01/ic_launcher.png" sizes="32x32"/>
 <link rel="icon" href="https://www.libretro.com/wp-content/uploads/2016/01/ic_launcher.png" sizes="192x192"/>
 <link rel="apple-touch-icon-precomposed" href="https://www.libretro.com/wp-content/uploads/2016/01/ic_launcher.png"/>
+<script src="https://unpkg.com/vue"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
 </head>
 <body>
-    <div class="container">
+
+    {% verbatim %}
+    <div class="container" id="app">
         <div class="jumbotron">
             <h1 class="display-4">RetroArch Lobby Browser</h1>
             <p class="lead">Currently available netplay rooms in <a href="http://libretro.com">RetroArch</a>.</p>
@@ -29,24 +33,52 @@
                     href="https://www.youtube.com/watch?v=n6aF0wNcm7E" role="button">How to Host</a>
             </p>
         </div>
-        {% if entries %}
-          <table class="table"><thead><tr>
-	    <th>Nickname</th><th>Game</th><th>Core</th><th>Password?</th><th>Created</th>
-	  </tr></thead><tbody>
-          {% for entry in entries %}
-            <tr>
-	      <th>{{ entry.username }}</th>
-              <td>{{ entry.game_name }}</td>
-              <td>{{ entry.core_name }} {{ entry.core_version }}</td>
-              <td>{{ entry.has_password|yesno:"Yes,No" }}</td>
-              <td>{{ entry.created|naturaltime }}</td>
-	    </tr>
-          {% endfor %}
-          </tbody></table>
-        {% else %}
-          <div class="alert alert-info" role="alert">There are currently no lobbies open.</div>
-        {% endif %}
+
+        <table class="table" v-if="entries.length"><thead><tr>
+            <th>Nickname</th><th>Game</th><th>Core</th><th>Password?</th><th>Created</th>
+        </tr></thead><tbody>
+            <tr v-for="entry in entries">
+                <th>{{ entry.fields.username }}</th>
+                <td>{{ entry.fields.game_name }}</td>
+                <td>{{ entry.fields.core_name }} {{ entry.fields.core_version }}</td>
+                <td>{{ entry.fields.has_password?"Yes":"No" }}</td>
+                <td>{{ moment(entry.fields.created).fromNow() }}</td>
+            </tr>
+        </tbody></table>
+
+        <div v-else class="alert alert-info" role="alert">There are currently no lobbies open.</div>
+
+
     </div>
+    {% endverbatim %}
+    <script>
+    //TODO: move this to an external file
+    var apiURL = "/list/"
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'Hello Vue!',
+            entries: {}
+        },
+        created: function () {
+            this.fetchData()
+        },
+        methods:{
+            fetchData: function () {
+                var xhr = new XMLHttpRequest(true)
+                var self = this
+                xhr.open('GET', apiURL)
+                xhr.onload = function () {
+                    self.entries = JSON.parse(xhr.responseText)
+                    console.log(self.entries)
+                }
+                xhr.send()
+            },
+            moment: moment
+
+        }
+    })
+    </script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
     <script
