@@ -78,13 +78,24 @@
                 var self = this
                 xhr.open('GET', apiURL)
                 xhr.onload = function () {
+                    self.oldEntries = self.entries;
                     self.entries = JSON.parse(xhr.responseText)
-                    console.log(self.entries)
+
+                    //test if we have new entries
+                    if("some" in self.oldEntries){
+                        self.entries.forEach(function(newEntry){
+                            if(!(self.oldEntries.some(function(oldEntry){
+                                return oldEntry.pk == newEntry.pk
+                            }))){
+                                console.log("newEntry");
+                                console.log(newEntry);
+                            }
+                        })
+                    }
                 }
                 xhr.send()
             },
             moment: moment
-
         }
     })
     </script>
