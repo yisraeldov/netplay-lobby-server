@@ -54,6 +54,12 @@
     <script>
     //TODO: move this to an external file
     var apiURL = "/list/"
+
+    /**
+     * How often to refresh the list in miliseconds
+     * @type int
+     */
+    var refereshInterval = 3000
     var app = new Vue({
         el: '#app',
         data: {
@@ -62,6 +68,9 @@
         },
         created: function () {
             this.fetchData()
+            setInterval(function () {
+                this.fetchData();
+            }.bind(this), refereshInterval);
         },
         methods:{
             fetchData: function () {
