@@ -257,4 +257,7 @@ def list_entries(request):
   else:
     data = serializers.serialize("json", entries, indent=2)
 
-  return HttpResponse(data, content_type='text/plain')
+  response HttpResponse(data, content_type='text/plain')
+  resopnse['Access-Control-Allow-Origin']='*'
+  return response
+  
